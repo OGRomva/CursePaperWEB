@@ -1,15 +1,19 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Repositories } from './repositories.model';
 import { RepCreateDto } from './dto/repCreate.dto';
 import { BranchService } from '../branch/branch.service';
 import * as fs from 'fs';
+import { CommitService } from '../commit/commit.service';
+import { zip } from 'zip-a-folder';
 
 @Injectable()
 export class RepositoriesService {
     constructor(
-        @InjectModel(Repositories) private reposRep: typeof Repositories,
+        @InjectModel(Repositories)
+        private reposRep: typeof Repositories,
         private branchService: BranchService,
+        private commitService: CommitService
     ) {
     }
 
@@ -72,5 +76,21 @@ export class RepositoriesService {
                 rep_id: rep_id,
             },
         });
+    }
+
+    async downloadLatest(branch_id: number) {
+        const branch = await this.branchService.getBranchById(branch_id);
+        const repos = await this.reposRep.findByPk(branch.repos_id);
+        const commit = await this.commitService.getLatestCommit(branch_id);
+        const path = `./uploads/${commit.creator_id}/${branch.repos_id}/${branch_id}/${commit.commit_id}`
+        await zip(path, `./uploads/${commit.creator_id}/${repos.rep_id}/${repos.title}.zip`)
+
+        const file = fs.createReadStream(`./uploads/${commit.creator_id}/${repos.rep_id}/${repos.title}.zip`);
+
+        console.log(`The file ${repos.title}.zip was successfully sent`);
+        return new StreamableFile(file, {
+            type: 'application/zip',
+            disposition: `attachment; filename="${repos.title}.zip"`
+        })
     }
 }
