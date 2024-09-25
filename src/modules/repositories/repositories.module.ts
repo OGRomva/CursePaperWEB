@@ -4,11 +4,16 @@ import { RepositoriesService } from './repositories.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Repositories } from './repositories.model';
 import { BranchModule } from '../branch/branch.module';
+import { CommitModule } from '../commit/commit.module';
 
 @Module({
     controllers: [RepositoriesController],
     providers: [RepositoriesService],
-    imports: [SequelizeModule.forFeature([Repositories]), BranchModule],
+    imports: [
+        SequelizeModule.forFeature([Repositories]),
+        BranchModule,
+        CommitModule
+    ],
 })
 export class RepositoriesModule {
 }

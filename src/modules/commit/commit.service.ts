@@ -6,6 +6,7 @@ import { CommitCreateDto } from './dto/commitCreate.dto';
 import { BranchService } from '../branch/branch.service';
 import { FileRep } from '../file-rep/file-rep.model';
 import * as fs from 'fs';
+import { zip } from 'zip-a-folder';
 
 @Injectable()
 export class CommitService {
@@ -76,5 +77,17 @@ export class CommitService {
 
     async findAll(branch_id: number) {
         return await this.commitRep.findAll({ where: { branch_id: branch_id }, include: { all: true } });
+    }
+
+    async getLatestCommit(branch_id: number) {
+        return (await this.commitRep.findAll({
+            where: {
+                branch_id: branch_id
+            },
+            order: [['commit_id', 'DESC']],
+            include: {
+                all: true
+            }
+        }))[0]
     }
 }

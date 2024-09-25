@@ -14,12 +14,12 @@ export class BranchController {
         return this.branchService.createBranch(dto);
     }
 
-    @Get('find-all/:id')
+    @Get(':id/find-all')
     findAll(@Param('id') rep_id: number) {
         return this.branchService.findAll(rep_id);
     }
 
-    @Delete('delete/:id')
+    @Delete(':id/delete')
     remove(@Param('id') branch_id: number) {
         return this.branchService.removeByBranchId(branch_id);
     }

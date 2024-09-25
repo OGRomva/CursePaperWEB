@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, Res, StreamableFile, UseGuards } from '@nestjs/common';
 import { AccessTokenGuard } from '../../guards/accessToken.guard';
 import { RepositoriesService } from './repositories.service';
 import { RepCreateDto } from './dto/repCreate.dto';
@@ -19,8 +19,13 @@ export class RepositoriesController {
         return this.repService.findAll(req['user']['sub']);
     }
 
-    @Delete('delete/:id')
+    @Delete(':id/delete')
     remove(@Param('id') rep_id: number) {
         return this.repService.removeOne(rep_id);
+    }
+
+    @Get(':branch_id/download/latest')
+    downloadLatest(@Param('branch_id') branch_id: number, @Res({passthrough: true}) res: Response) {
+        return this.repService.downloadLatest(branch_id);
     }
 }
