@@ -1,13 +1,11 @@
 import {
-    Body,
     Controller, Get, Param,
-    Post, Req, Res, UploadedFile,
+    Post, Req,
     UploadedFiles,
     UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CommitService } from './commit.service';
-import { CommitCreateDto } from './dto/commitCreate.dto';
 
 @Controller('commit')
 export class CommitController {
@@ -17,7 +15,10 @@ export class CommitController {
     @Post('create')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'files' }]))
     uploadFile(@UploadedFiles() files, @Req() req: Request) {
-        return this.commitService.createCommit(JSON.parse(req['body']['dto']), files);
+        return this.commitService.createCommit({
+            dto: JSON.parse(req['body']['dto']),
+            filesMulter: files
+        });
     }
 
     @Get(':branch_id/find-all')

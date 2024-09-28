@@ -20,7 +20,7 @@ export class AuthController {
     }
 
     @UseGuards(AccessTokenGuard)
-    @Get('logout')
+    @Post('logout')
     logout(@Req() req: Request) {
         this.authService.logout(req['user']['sub'])
     }
@@ -29,7 +29,7 @@ export class AuthController {
     @Get('refresh')
     refreshTokens(@Req() req: Request) {
         const user_id = req['user']['sub'];
-        const refreshToken = req['user']['refresh_token'];
+        const refreshToken = req['user']['refreshToken'];
         return this.authService.refreshTokens(user_id, refreshToken)
     }
 }

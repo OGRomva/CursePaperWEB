@@ -1,8 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Branch } from './branch.model';
 import { BranchCreateDto } from './dto/branchCreate.dto';
 import { CommitService } from '../commit/commit.service';
+import * as fs from 'fs';
 
 @Injectable()
 export class BranchService {
@@ -15,7 +16,19 @@ export class BranchService {
     }
 
     async createBranch(dto: BranchCreateDto) {
-        return await this.branchRep.create(dto);
+        await this.branchRep.sync({alter: true})
+        if (dto.isMain) {
+            return await this.branchRep.create(dto);
+        } else {
+            const masterBranch = (await this.findAll(dto.repos_id)).map((branch) => {
+                if (branch.isMaster) return branch
+            })[0]
+
+            const branch = await this.branchRep.create(dto)
+            const commit = await this.commitService.getLatestCommit(masterBranch.branch_id);
+            await this.commitService.copyCommitToNewBranch(commit.commit_id, branch.branch_id)
+            return branch;
+        }
     }
 
     async findAll(rep_id: number) {
@@ -34,10 +47,51 @@ export class BranchService {
     }
 
     async removeByBranchId(branch_id: number) {
+        await this.commitService.removeAll(branch_id);
         return await this.branchRep.destroy({ where: { branch_id: branch_id } });
     }
 
     async getBranchById(branch_id: number) {
         return await this.branchRep.findByPk(branch_id);
+    }
+
+    async mergeBranches(branchFromMergeId: number, branchToMergeId: number, shouldDelete: boolean, message: string) {
+        const branchFromMerge = await this.branchRep.findByPk(branchFromMergeId)
+
+        if (branchFromMerge.isMaster) {
+            throw new HttpException('You can\'t relocate master branch to other', HttpStatus.BAD_REQUEST)
+        } else {
+            const filesFromMainBranch = (await this.commitService.getLatestCommit(branchFromMergeId)).files
+            const filesFromSlaveBranch = (await this.commitService.getLatestCommit(branchToMergeId)).files
+            const creatorId = (await this.commitService.getLatestCommit(branchFromMergeId)).creator_id;
+
+            const unionFileList = [...filesFromMainBranch, ...filesFromSlaveBranch];
+            const unionFiles = [];
+
+            for (const file of unionFileList) {
+                const fileData = fs.readFileSync(`${file.filePath}/${file.fileName}`)
+                unionFiles.push({
+                    fileName: file.fileName,
+                    buffer: fileData
+                })
+            }
+
+            await this.commitService.createCommit({
+                dto: {
+                    message: message,
+                    creator_id: creatorId,
+                    branch_id: branchToMergeId
+                },
+                filesBuffer: unionFiles
+            })
+
+            if (shouldDelete) {
+                await this.branchRep.destroy({
+                    where: {
+                        branch_id: branchFromMergeId
+                    }
+                })
+            }
+        }
     }
 }

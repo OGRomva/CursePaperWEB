@@ -35,4 +35,8 @@ export class FileRepService {
         return await this.fileRepository.destroy({where: {commit_id: commit_id}});
     }
 
+    async getFileById(file_id: number) {
+        return await this.fileRepository.findByPk(file_id);
+    }
+
 }
