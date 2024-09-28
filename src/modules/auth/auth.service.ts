@@ -33,7 +33,11 @@ export class AuthService {
 
         const tokens = await this.getTokens(newUser.dataValues.user_id, newUser.dataValues.username);
         await this.updateRefreshToken(newUser.dataValues.user_id, tokens.refreshToken);
-        return tokens;
+        const user = {
+            user_id: userExist.dataValues.user_id,
+            username: userExist.dataValues.username
+        }
+        return { ...tokens, user};
     }
 
     async singIn(dto: AuthDto) {
@@ -57,7 +61,11 @@ export class AuthService {
 
         const tokens = await this.getTokens(userExist.dataValues.user_id, userExist.dataValues.username);
         await this.updateRefreshToken(userExist.dataValues.user_id, tokens.refreshToken);
-        return tokens;
+        const user = {
+            user_id: userExist.dataValues.user_id,
+            username: userExist.dataValues.username
+        }
+        return { ...tokens, user};
     }
 
     async logout(user_id: number) {
@@ -83,7 +91,7 @@ export class AuthService {
                 },
                 {
                     secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-                    expiresIn: '1h',
+                    expiresIn: '10m',
                 },
             ),
             this.jwtService.signAsync(
@@ -93,7 +101,7 @@ export class AuthService {
                 },
                 {
                     secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-                    expiresIn: '15m',
+                    expiresIn: '1h',
                 },
             ),
         ]);
@@ -115,6 +123,11 @@ export class AuthService {
         const tokens = await this.getTokens(user.dataValues.user_id, user.dataValues.username);
         await this.updateRefreshToken(user.dataValues.user_id, tokens.refreshToken);
 
-        return tokens;
+        const newUser = {
+            user_id: user.dataValues.user_id,
+            username: user.dataValues.username
+        }
+
+        return { ...tokens, user};
     }
 }

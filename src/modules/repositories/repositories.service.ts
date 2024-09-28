@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable, StreamableFile } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Repositories } from './repositories.model';
 import { RepCreateDto } from './dto/repCreate.dto';
@@ -6,14 +6,17 @@ import { BranchService } from '../branch/branch.service';
 import * as fs from 'fs';
 import { CommitService } from '../commit/commit.service';
 import { zip } from 'zip-a-folder';
+import { FileRepService } from '../file-rep/file-rep.service';
 
 @Injectable()
 export class RepositoriesService {
     constructor(
         @InjectModel(Repositories)
         private reposRep: typeof Repositories,
+
         private branchService: BranchService,
-        private commitService: CommitService
+        private commitService: CommitService,
+        private fileRepService: FileRepService
     ) {
     }
 
@@ -32,12 +35,13 @@ export class RepositoriesService {
 
         const repos = await this.reposRep.create({
             title: dto.title,
-            owner_id: user_id,
+            owner_id: user_id
         });
 
         const branch = await this.branchService.createBranch({
             title: 'main',
             repos_id: repos.rep_id,
+            isMain: true
         });
 
         await repos.$set('branches', [branch.branch_id]);
@@ -92,5 +96,17 @@ export class RepositoriesService {
             type: 'application/zip',
             disposition: `attachment; filename="${repos.title}.zip"`
         })
+    }
+
+    async getFile(file_id: number) {
+        const file = await this.fileRepService.getFileById(file_id);
+        const expansion = file.fileName.split('.').pop();
+
+        const ReadStream = fs.createReadStream(`${file.filePath}/${file.fileName}`);
+        console.log(file.fileName);
+        console.log(expansion);
+        return new StreamableFile(ReadStream, {
+            type: `application/${expansion}`
+        });
     }
 }

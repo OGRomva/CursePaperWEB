@@ -5,12 +5,16 @@ import { Commit } from '../commit/commit.model';
 interface BranchCreationAttrs {
     title: string;
     repos_id: number;
+    isMaster: boolean;
 }
 
 @Table({ tableName: 'branch' })
 export class Branch extends Model<Branch, BranchCreationAttrs> {
     @Column({ type: DataType.INTEGER, unique: true, primaryKey: true, allowNull: false, autoIncrement: true })
     branch_id: number;
+
+    @Column({type: DataType.BOOLEAN})
+    isMaster: boolean
 
     @Column({ type: DataType.STRING, allowNull: false })
     title: string;

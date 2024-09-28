@@ -19,7 +19,7 @@ export class RepositoriesController {
         return this.repService.findAll(req['user']['sub']);
     }
 
-    @Delete(':id/delete')
+    @Delete(':id')
     remove(@Param('id') rep_id: number) {
         return this.repService.removeOne(rep_id);
     }
@@ -27,5 +27,10 @@ export class RepositoriesController {
     @Get(':branch_id/download/latest')
     downloadLatest(@Param('branch_id') branch_id: number, @Res({passthrough: true}) res: Response) {
         return this.repService.downloadLatest(branch_id);
+    }
+
+    @Get('get-file/:file_id')
+    getFileFromLatestCommit(@Param('file_id') file_id: number) {
+        return this.repService.getFile(file_id)
     }
 }

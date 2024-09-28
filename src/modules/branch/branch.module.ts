@@ -4,6 +4,7 @@ import { BranchService } from './branch.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Branch } from './branch.model';
 import { CommitModule } from '../commit/commit.module';
+import { RepositoriesModule } from '../repositories/repositories.module';
 
 @Module({
     controllers: [BranchController],
