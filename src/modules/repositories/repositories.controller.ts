@@ -19,6 +19,11 @@ export class RepositoriesController {
         return this.repService.findAll(req['user']['sub']);
     }
 
+    @Get(':repos_id')
+    findByPk(@Param('repos_id') repos_id: number) {
+        return this.repService.findByPk(repos_id)
+    }
+
     @Delete(':id')
     remove(@Param('id') rep_id: number) {
         return this.repService.removeOne(rep_id);

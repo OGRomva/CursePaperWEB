@@ -40,17 +40,17 @@ export class RepositoriesService {
 
         const branch = await this.branchService.createBranch({
             title: 'main',
-            repos_id: repos.rep_id,
+            repos_id: repos.repos_id,
             isMain: true
         });
 
         await repos.$set('branches', [branch.branch_id]);
 
-        return await this.reposRep.findByPk(repos.rep_id, { include: { all: true } });
+        return await this.reposRep.findByPk(repos.repos_id, { include: { all: true } });
     }
 
     async findAll(user_id: number) {
-        return await this.reposRep.findAll({
+        const check = await this.reposRep.findAll({
             where: {
                 owner_id: user_id,
             },
@@ -58,6 +58,13 @@ export class RepositoriesService {
                 all: true,
             },
         });
+
+        if (check.length == 0) {
+            console.log(check);
+            throw new HttpException(`The repositories with owner id ${user_id} had no founded`, HttpStatus.FORBIDDEN)
+        }
+
+        return check
     }
 
     async removeOne(rep_id: number) {
@@ -77,7 +84,7 @@ export class RepositoriesService {
 
         return await this.reposRep.destroy({
             where: {
-                rep_id: rep_id,
+                repos_id: rep_id,
             },
         });
     }
@@ -87,14 +94,20 @@ export class RepositoriesService {
         const repos = await this.reposRep.findByPk(branch.repos_id);
         const commit = await this.commitService.getLatestCommit(branch_id);
         const path = `./uploads/${commit.creator_id}/${branch.repos_id}/${branch_id}/${commit.commit_id}`
-        await zip(path, `./uploads/${commit.creator_id}/${repos.rep_id}/${repos.title}.zip`)
+        await zip(path, `./uploads/${commit.creator_id}/${repos.repos_id}/${repos.title}.zip`)
 
-        const file = fs.createReadStream(`./uploads/${commit.creator_id}/${repos.rep_id}/${repos.title}.zip`);
+        const file = fs.createReadStream(`./uploads/${commit.creator_id}/${repos.repos_id}/${repos.title}.zip`);
 
         console.log(`The file ${repos.title}.zip was successfully sent`);
         return new StreamableFile(file, {
             type: 'application/zip',
             disposition: `attachment; filename="${repos.title}.zip"`
+        })
+    }
+
+    async findByPk(repos_id: number) {
+        return await this.reposRep.findByPk(repos_id, {
+            include: {all: true}
         })
     }
 

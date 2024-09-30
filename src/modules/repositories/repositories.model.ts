@@ -10,7 +10,7 @@ interface RepositoryCreationAttrs {
 @Table({tableName: 'Repos'})
 export class Repositories extends Model<Repositories, RepositoryCreationAttrs> {
     @Column({type: DataType.INTEGER, unique: true, primaryKey: true, allowNull: false, autoIncrement: true})
-    rep_id: number;
+    repos_id: number;
 
     @Column({type: DataType.STRING})
     title: string;
