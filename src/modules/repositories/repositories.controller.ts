@@ -38,4 +38,9 @@ export class RepositoriesController {
     getFileFromLatestCommit(@Param('file_id') file_id: number) {
         return this.repService.getFile(file_id)
     }
+
+    @Get('get-file-list/:branch_id/latest')
+    getFileListFromLatestCommitInBranch(@Param('branch_id') branch_id: number) {
+        return this.repService.getLatestFileFromBranch(branch_id);
+    }
 }

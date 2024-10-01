@@ -17,12 +17,10 @@ export class BranchService {
 
     async createBranch(dto: BranchCreateDto) {
         await this.branchRep.sync({alter: true})
-        if (dto.isMain) {
+        if (dto.isMaster) {
             return await this.branchRep.create(dto);
         } else {
-            const masterBranch = (await this.findAll(dto.repos_id)).map((branch) => {
-                if (branch.isMaster) return branch
-            })[0]
+            const masterBranch = (await this.findAll(dto.repos_id)).find(branch => branch.isMaster == true)
 
             const branch = await this.branchRep.create(dto)
             const commit = await this.commitService.getLatestCommit(masterBranch.branch_id);
@@ -32,7 +30,7 @@ export class BranchService {
     }
 
     async findAll(rep_id: number) {
-        return await this.branchRep.findAll({ where: { repos_id: rep_id }, include: { all: true } });
+        return await this.branchRep.findAll({ where: { repos_id: rep_id }});
     }
 
     //for deleting a repository
@@ -46,8 +44,15 @@ export class BranchService {
         return await this.branchRep.destroy({ where: { repos_id: repos_id } });
     }
 
-    async removeByBranchId(branch_id: number) {
+    async removeByBranchId(branch_id: number, user_id: number) {
+        const br = await this.branchRep.findByPk(branch_id);
         await this.commitService.removeAll(branch_id);
+        fs.rm(`./uploads/${user_id}/${br.repos_id}/${branch_id}`, {force: true, recursive: true}, (err) => {
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+        })
         return await this.branchRep.destroy({ where: { branch_id: branch_id } });
     }
 

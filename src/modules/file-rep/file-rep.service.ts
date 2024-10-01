@@ -24,9 +24,9 @@ export class FileRepService {
         const files = await this.fileRepository.findAll({where: {commit_id: commit_id}})
 
         for (const file of files) {
-            console.log(file);
-            fs.rm(file.filePath, {force: true}, (err) => {
+            fs.rm(`${file.filePath}/${file.fileName}`, {force: true}, (err) => {
                 if (err) {
+                    console.log(err);
                     throw err;
                 }
             })

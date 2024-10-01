@@ -41,7 +41,7 @@ export class RepositoriesService {
         const branch = await this.branchService.createBranch({
             title: 'main',
             repos_id: repos.repos_id,
-            isMain: true
+            isMaster: true
         });
 
         await repos.$set('branches', [branch.branch_id]);
@@ -103,6 +103,12 @@ export class RepositoriesService {
             type: 'application/zip',
             disposition: `attachment; filename="${repos.title}.zip"`
         })
+    }
+
+    async getLatestFileFromBranch(branch_id: number) {
+        const commit = await this.commitService.getLatestCommit(branch_id);
+        const fileList = await this.fileRepService.getFilesFromCommitId(commit.commit_id)
+        return fileList;
     }
 
     async findByPk(repos_id: number) {

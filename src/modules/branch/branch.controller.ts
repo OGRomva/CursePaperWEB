@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { BranchService } from './branch.service';
 import { AccessTokenGuard } from '../../guards/accessToken.guard';
 import { BranchCreateDto } from './dto/branchCreate.dto';
@@ -26,7 +26,7 @@ export class BranchController {
     }
 
     @Delete(':id/delete')
-    remove(@Param('id') branch_id: number) {
-        return this.branchService.removeByBranchId(branch_id);
+    remove(@Param('id') branch_id: number, @Req() req: Request) {
+        return this.branchService.removeByBranchId(branch_id, req['user']['sub']);
     }
 }
